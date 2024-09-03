@@ -222,11 +222,9 @@ def _load_global_deps() -> None:
 
     if library_path:
         global_deps_lib_path = os.path.join(library_path, 'lib', lib_name)
-    try:
-        ctypes.CDLL(global_deps_lib_path, mode=ctypes.RTLD_GLOBAL)
-    except OSError as err:
-        # Can only happen for wheel with cuda libs as PYPI deps
-        # As PyTorch is not purelib, but nvidia-*-cu12 is
+    
+    if True:
+        # Always preload all cuda libraries
         cuda_libs: Dict[str, str] = {
             'cublas': 'libcublas.so.*[0-9]',
             'cudnn': 'libcudnn.so.*[0-9]',
@@ -240,9 +238,7 @@ def _load_global_deps() -> None:
             'nccl': 'libnccl.so.*[0-9]',
             'nvtx': 'libnvToolsExt.so.*[0-9]',
         }
-        is_cuda_lib_err = [lib for lib in cuda_libs.values() if lib.split('.')[0] in err.args[0]]
-        if not is_cuda_lib_err:
-            raise err
+
         for lib_folder, lib_name in cuda_libs.items():
             _preload_cuda_deps(lib_folder, lib_name)
         ctypes.CDLL(global_deps_lib_path, mode=ctypes.RTLD_GLOBAL)
